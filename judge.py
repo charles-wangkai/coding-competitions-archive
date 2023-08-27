@@ -4,7 +4,9 @@ import os
 from pathlib import Path
 import pprint
 import requests
+import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -19,7 +21,7 @@ def main(problem_folder, submission_file):
 
     input_files = []
     validator_file = None
-    for dirpath, dirnames, filenames in os.walk(problem_folder):
+    for dirpath, _, filenames in os.walk(problem_folder):
         for filename in filenames:
             if filename.endswith(".in"):
                 input_files.append(os.path.join(dirpath, filename))
@@ -31,12 +33,12 @@ def main(problem_folder, submission_file):
     pprint.pprint(input_files, width=-1)
 
     print("validator_file:", validator_file)
-    if validator_file:
-        raise NotImplementedError
 
     for input_file in input_files:
         print()
         print("=" * 10, "Checking", input_file, "=" * 10)
+
+        answer_file = input_file[: -len(".in")] + ".ans"
 
         r = requests.post(
             "http://localhost:2358/submissions?base64_encoded=true",
@@ -48,9 +50,7 @@ def main(problem_folder, submission_file):
                 "stdin": base64.b64encode(Path(input_file).read_bytes()).decode(),
                 "expected_output": None
                 if validator_file
-                else base64.b64encode(
-                    Path(input_file[: -len(".in")] + ".ans").read_bytes()
-                ).decode(),
+                else base64.b64encode(Path(answer_file).read_bytes()).decode(),
                 "cpu_time_limit": problem_limits["cpu_time_limit"],
                 "memory_limit": problem_limits["memory_limit"],
             },
@@ -61,9 +61,7 @@ def main(problem_folder, submission_file):
         print("submission_token:", submission_token)
 
         while True:
-            r = requests.get(
-                f"http://localhost:2358/submissions/{submission_token}?fields=time,memory,stderr,compile_output,message,status"
-            )
+            r = requests.get(f"http://localhost:2358/submissions/{submission_token}")
             r.raise_for_status()
             resp = r.json()
             if resp["status"]["description"] not in ["In Queue", "Processing"]:
@@ -72,9 +70,29 @@ def main(problem_folder, submission_file):
             time.sleep(1)
 
         print("submission:")
-        print(json.dumps(resp, indent=4))
+        print(json.dumps({k: resp[k] for k in resp if k != "stdout"}, indent=4))
         if resp["status"]["description"] != "Accepted":
             break
+
+        if validator_file:
+            output_file = tempfile.NamedTemporaryFile(delete=False)
+            Path(output_file.name).write_text(resp["stdout"])
+
+            validation_result = subprocess.run(
+                [
+                    "python3" if validator_file.endswith(".py3") else "python",
+                    validator_file,
+                    input_file,
+                    output_file.name,
+                    answer_file,
+                ]
+            )
+            if validation_result.returncode:
+                print("Wrong Answer - Validation failed!")
+
+                break
+            else:
+                print("Accepted - Validation passed!")
 
 
 if __name__ == "__main__":
