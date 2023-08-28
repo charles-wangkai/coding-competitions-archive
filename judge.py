@@ -10,6 +10,15 @@ import tempfile
 import time
 
 
+def find_validator_launcher(validator_file):
+    if validator_file.endswith(".py"):
+        return "python"
+    if validator_file.endswith(".py3"):
+        return "python3"
+    if validator_file.endswith(".java"):
+        return "java"
+
+
 def main(problem_folder, submission_file):
     print("problem_folder:", problem_folder)
     print("submission_file:", submission_file)
@@ -80,7 +89,7 @@ def main(problem_folder, submission_file):
 
             validation_result = subprocess.run(
                 [
-                    "python3" if validator_file.endswith(".py3") else "python",
+                    find_validator_launcher(validator_file),
                     validator_file,
                     input_file,
                     output_file.name,
