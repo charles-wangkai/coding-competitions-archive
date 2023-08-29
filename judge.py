@@ -19,6 +19,17 @@ def find_validator_launcher(validator_file):
         return "java"
 
 
+def get_limit(problem_limits, input_file, key):
+    if key in problem_limits:
+        return problem_limits[key]
+
+    for test_set in problem_limits:
+        if test_set in input_file:
+            return problem_limits[test_set][key]
+
+    raise RuntimeError
+
+
 def main(problem_folder, submission_file):
     print("problem_folder:", problem_folder)
     print("submission_file:", submission_file)
@@ -26,7 +37,8 @@ def main(problem_folder, submission_file):
     problem_limits = json.loads(
         Path(os.path.join(problem_folder, "judge0.json")).read_text()
     )
-    print("problem_limits:", problem_limits)
+    print("problem_limits:")
+    print(json.dumps(problem_limits, indent=4))
 
     input_files = []
     validator_file = None
@@ -60,8 +72,10 @@ def main(problem_folder, submission_file):
                 "expected_output": None
                 if validator_file
                 else base64.b64encode(Path(answer_file).read_bytes()).decode(),
-                "cpu_time_limit": problem_limits["cpu_time_limit"],
-                "memory_limit": problem_limits["memory_limit"],
+                "cpu_time_limit": get_limit(
+                    problem_limits, input_file, "cpu_time_limit"
+                ),
+                "memory_limit": get_limit(problem_limits, input_file, "memory_limit"),
             },
         )
         r.raise_for_status()
