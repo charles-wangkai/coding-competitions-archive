@@ -2,8 +2,6 @@ import java.io.File;
 import java.util.Scanner;
 
 public class CustomJudge {
-  static final double EPSILON = 1e-6;
-
   public static void main(String[] args) throws Throwable {
     judge(args[0], args[1], args[2]);
   }
