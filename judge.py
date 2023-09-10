@@ -101,15 +101,26 @@ def main(problem_folder, submission_file):
             output_file = tempfile.NamedTemporaryFile(delete=False)
             Path(output_file.name).write_text(resp["stdout"])
 
-            validation_result = subprocess.run(
-                [
-                    find_validator_launcher(validator_file),
-                    validator_file,
-                    input_file,
-                    output_file.name,
-                    answer_file,
-                ]
-            )
+            if validator_file.endswith(".cc"):
+                ps = subprocess.Popen(
+                    ["g++", "-std=c++11", validator_file], stdout=subprocess.PIPE
+                )
+                validation_result = subprocess.run(
+                    ["./a.out", input_file, output_file.name, answer_file],
+                    stdin=ps.stdout,
+                )
+                ps.wait()
+            else:
+                validation_result = subprocess.run(
+                    [
+                        find_validator_launcher(validator_file),
+                        validator_file,
+                        input_file,
+                        output_file.name,
+                        answer_file,
+                    ]
+                )
+
             if validation_result.returncode:
                 print("Wrong Answer - Validation failed!")
 
