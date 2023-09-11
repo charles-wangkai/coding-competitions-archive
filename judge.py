@@ -102,14 +102,17 @@ def main(problem_folder, submission_file):
             Path(output_file.name).write_text(resp["stdout"])
 
             if validator_file.endswith(".cc"):
-                ps = subprocess.Popen(
-                    ["g++", "-std=c++11", validator_file], stdout=subprocess.PIPE
+                compilation_result = subprocess.run(
+                    ["g++", "-std=c++11", validator_file]
                 )
+                if compilation_result.returncode:
+                    print("Internal Error - Validation compilation failed!")
+
+                    break
+
                 validation_result = subprocess.run(
-                    ["./a.out", input_file, output_file.name, answer_file],
-                    stdin=ps.stdout,
+                    ["./a.out", input_file, output_file.name, answer_file]
                 )
-                ps.wait()
             else:
                 validation_result = subprocess.run(
                     [
