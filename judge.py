@@ -74,27 +74,39 @@ def main(problem_folder, submission_file):
 
         answer_file = input_file[: -len(".in")] + ".ans"
 
-        r = requests.post(
-            "http://localhost:2358/submissions?base64_encoded=true",
-            data={
-                "language_id": 62,
-                "source_code": base64.b64encode(
-                    Path(submission_file).read_bytes()
-                ).decode(),
-                "stdin": base64.b64encode(Path(input_file).read_bytes()).decode(),
-                "expected_output": None
-                if validator_file
-                else base64.b64encode(Path(answer_file).read_bytes()).decode(),
-                "cpu_time_limit": get_limit(
-                    problem_limits, input_file, "cpu_time_limit"
-                ),
-                "memory_limit": get_limit(problem_limits, input_file, "memory_limit"),
-            },
-        )
-        r.raise_for_status()
-        resp = r.json()
-        submission_token = resp["token"]
-        print("submission_token:", submission_token)
+        while True:
+            try:
+                r = requests.post(
+                    "http://localhost:2358/submissions?base64_encoded=true",
+                    data={
+                        "language_id": 62,
+                        "source_code": base64.b64encode(
+                            Path(submission_file).read_bytes()
+                        ).decode(),
+                        "stdin": base64.b64encode(
+                            Path(input_file).read_bytes()
+                        ).decode(),
+                        "expected_output": None
+                        if validator_file
+                        else base64.b64encode(Path(answer_file).read_bytes()).decode(),
+                        "cpu_time_limit": get_limit(
+                            problem_limits, input_file, "cpu_time_limit"
+                        ),
+                        "memory_limit": get_limit(
+                            problem_limits, input_file, "memory_limit"
+                        ),
+                    },
+                )
+                r.raise_for_status()
+                resp = r.json()
+                submission_token = resp["token"]
+                print("submission_token:", submission_token)
+
+                break
+            except Exception as e:
+                print(e)
+
+                time.sleep(5)
 
         while True:
             try:
