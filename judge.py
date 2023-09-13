@@ -40,6 +40,19 @@ def main(problem_folder, submission_file):
     print("problem_limits:")
     print(json.dumps(problem_limits, indent=4))
 
+    for dirpath, _, filenames in os.walk(problem_folder):
+        for filename in filenames:
+            if filename == "1.in.part00":
+                print(f"Concating file: {dirpath}/1.in")
+
+                concat_result = subprocess.run(
+                    f"cat {dirpath}/1.in.part* > {dirpath}/1.in", shell=True
+                )
+                if concat_result.returncode:
+                    print("Internal Error - Input file concat failed!")
+
+                    break
+
     input_files = []
     validator_file = None
     for dirpath, _, filenames in os.walk(problem_folder):
@@ -84,11 +97,16 @@ def main(problem_folder, submission_file):
         print("submission_token:", submission_token)
 
         while True:
-            r = requests.get(f"http://localhost:2358/submissions/{submission_token}")
-            r.raise_for_status()
-            resp = r.json()
-            if resp["status"]["description"] not in ["In Queue", "Processing"]:
-                break
+            try:
+                r = requests.get(
+                    f"http://localhost:2358/submissions/{submission_token}"
+                )
+                r.raise_for_status()
+                resp = r.json()
+                if resp["status"]["description"] not in ["In Queue", "Processing"]:
+                    break
+            except Exception as e:
+                print(e)
 
             time.sleep(1)
 
@@ -106,7 +124,7 @@ def main(problem_folder, submission_file):
                     ["g++", "-std=c++11", validator_file]
                 )
                 if compilation_result.returncode:
-                    print("Internal Error - Validation compilation failed!")
+                    print("Internal Error - Validator compilation failed!")
 
                     break
 
