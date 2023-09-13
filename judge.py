@@ -133,7 +133,7 @@ def main(problem_folder, submission_file):
 
             if validator_file.endswith(".cc"):
                 compilation_result = subprocess.run(
-                    ["g++", "-std=c++11", validator_file]
+                    ["g++", "-std=c++11", "-w", validator_file]
                 )
                 if compilation_result.returncode:
                     print("Internal Error - Validator compilation failed!")
