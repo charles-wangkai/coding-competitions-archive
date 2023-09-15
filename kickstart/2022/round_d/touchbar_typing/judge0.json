@@ -1,0 +1,18 @@
+{
+  "/data/sample/": {
+    "cpu_time_limit": 20,
+    "memory_limit": 1000000
+  },
+  "/data/secret/subtask1/": {
+    "cpu_time_limit": 20,
+    "memory_limit": 1000000
+  },
+  "/data/secret/subtask2/": {
+    "cpu_time_limit": 20,
+    "memory_limit": 1000000
+  },
+  "/data/secret/subtask3/": {
+    "cpu_time_limit": 40,
+    "memory_limit": 1000000
+  }
+}
