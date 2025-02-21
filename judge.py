@@ -10,6 +10,20 @@ import tempfile
 import time
 
 
+def find_language_id(submission_file):
+    if submission_file.endswith(".java"):
+        return 62
+    if submission_file.endswith(".rs"):
+        return 73
+
+
+def find_compiler_options(submission_file):
+    if submission_file.endswith(".java"):
+        return ""
+    if submission_file.endswith(".rs"):
+        return "-O"
+
+
 def find_validator_launcher(validator_file):
     if validator_file.endswith(".py"):
         return "python"
@@ -79,22 +93,27 @@ def main(problem_folder, submission_file):
                 r = requests.post(
                     "http://localhost:2358/submissions?base64_encoded=true",
                     data={
-                        "language_id": 62,
+                        "language_id": find_language_id(submission_file),
                         "source_code": base64.b64encode(
                             Path(submission_file).read_bytes()
                         ).decode(),
                         "stdin": base64.b64encode(
                             Path(input_file).read_bytes()
                         ).decode(),
-                        "expected_output": None
-                        if validator_file
-                        else base64.b64encode(Path(answer_file).read_bytes()).decode(),
+                        "expected_output": (
+                            None
+                            if validator_file
+                            else base64.b64encode(
+                                Path(answer_file).read_bytes()
+                            ).decode()
+                        ),
                         "cpu_time_limit": get_limit(
                             problem_limits, input_file, "cpu_time_limit"
                         ),
                         "memory_limit": get_limit(
                             problem_limits, input_file, "memory_limit"
                         ),
+                        "compiler_options": find_compiler_options(submission_file),
                     },
                 )
                 r.raise_for_status()
