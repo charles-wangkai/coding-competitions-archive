@@ -24,15 +24,6 @@ def find_compiler_options(submission_file):
         return "-O"
 
 
-def find_validator_launcher(validator_file):
-    if validator_file.endswith(".py"):
-        return "python"
-    if validator_file.endswith(".py3"):
-        return "python3"
-    if validator_file.endswith(".java"):
-        return "java"
-
-
 def get_limit(problem_limits, input_file, key):
     if key in problem_limits:
         return problem_limits[key]
@@ -162,10 +153,40 @@ def main(problem_folder, submission_file):
                 validation_result = subprocess.run(
                     ["./a.out", input_file, output_file.name, answer_file]
                 )
-            else:
+            elif validator_file.endswith(".java"):
+                compilation_result = subprocess.run(
+                    ["javac", "-d", "out", validator_file, "JudgeUtil.java"]
+                )
+                if compilation_result.returncode:
+                    print("Internal Error - Validator compilation failed!")
+
+                    break
+
                 validation_result = subprocess.run(
                     [
-                        find_validator_launcher(validator_file),
+                        "java",
+                        "-cp",
+                        "out",
+                        "CustomJudge",
+                        input_file,
+                        output_file.name,
+                        answer_file,
+                    ]
+                )
+            elif validator_file.endswith(".py"):
+                validation_result = subprocess.run(
+                    [
+                        "python",
+                        validator_file,
+                        input_file,
+                        output_file.name,
+                        answer_file,
+                    ]
+                )
+            elif validator_file.endswith(".py3"):
+                validation_result = subprocess.run(
+                    [
+                        "python3",
                         validator_file,
                         input_file,
                         output_file.name,

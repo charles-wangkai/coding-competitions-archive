@@ -1,5 +1,7 @@
 a.out
 
+*.class
+
 kickstart/2021/round_d/cutting_intervals/data/secret/subtask2/1.in
 kickstart/2021/round_d/final_exam/data/secret/subtask2/1.in
 kickstart/2021/round_d/primes_and_queries/data/secret/subtask2/1.in
